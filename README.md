@@ -12,7 +12,7 @@ app's dependency graph (the exact `analyzer` pin would otherwise clash):
 
 ```bash
 dart pub global activate --source git \
-  git@github.com:iqbal-mekari/test-impact.git --git-ref v0.0.1
+  https://github.com/iqbal-mekari/test-impact.git --git-ref v0.0.1
 dart pub global run test_impact --help
 ```
 
