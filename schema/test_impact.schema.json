@@ -1,0 +1,111 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "test_impact.schema.json",
+  "title": "test_impact.yaml",
+  "description": "Per-package test impact mapping (spec v1).",
+  "type": "object",
+  "required": ["version", "package"],
+  "additionalProperties": false,
+  "properties": {
+    "version": { "const": 1 },
+    "package": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Pubspec name of this package."
+    },
+    "repo": {
+      "type": "object",
+      "description": "Repo-wide rules. ROOT test_impact.yaml only; repo-relative globs.",
+      "additionalProperties": false,
+      "properties": {
+        "safe": { "$ref": "#/definitions/globs", "description": "Never run unit tests." },
+        "run_all": { "$ref": "#/definitions/globs", "description": "Run every package's full suite." },
+        "runtime_tests": {
+          "type": "array",
+          "description": "Files that tests read from disk at runtime (not imports). A match selects the listed tests in ADDITION to package rules and even when the path is also safe. run_all still wins.",
+          "items": {
+            "type": "object",
+            "required": ["paths", "tests"],
+            "additionalProperties": false,
+            "properties": {
+              "paths": { "$ref": "#/definitions/globs", "minItems": 1, "description": "Repo-relative globs of the files read." },
+              "except": { "$ref": "#/definitions/globs", "description": "Repo-relative globs excluded from paths, e.g. generated files the tests skip." },
+              "tests": { "$ref": "#/definitions/globs", "minItems": 1, "description": "Repo-relative test files. A missing one fails validate (rule g) and runs its package fully." }
+            }
+          }
+        }
+      }
+    },
+    "tooling": {
+      "type": "object",
+      "description": "Tool settings. ROOT test_impact.yaml only (a tooling block in any other mapping is a config error). Every key is optional.",
+      "additionalProperties": false,
+      "properties": {
+        "flutter_command": {
+          "type": "array",
+          "items": { "type": "string" },
+          "minItems": 1,
+          "description": "Command prefix that runs Flutter, e.g. [fvm, flutter]. Default [flutter]."
+        },
+        "dart_command": {
+          "type": "array",
+          "items": { "type": "string" },
+          "minItems": 1,
+          "description": "Command prefix that runs Dart, e.g. [fvm, dart]. Default [dart]."
+        },
+        "isolation_patterns": {
+          "type": "array",
+          "items": { "type": "string", "format": "regex" },
+          "description": "Dart regexes (the loader rejects ones that do not compile). A test, or a helper it imports, matching one runs as its own entrypoint instead of sharing the bundle isolate. Default: generic process-global hazards (get_it registration without reset, Hive init, Bloc globals, HttpOverrides.global, platform instance overrides)."
+        },
+        "bundle_policy": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Optional repo-relative path of the bundle policy JSON."
+        }
+      }
+    },
+    "run_all": {
+      "$ref": "#/definitions/globs",
+      "description": "Package-relative. This package full suite plus all transitive dependents' full suites."
+    },
+    "run_package": {
+      "$ref": "#/definitions/globs",
+      "description": "Package-relative. This package full suite only."
+    },
+    "conventions": {
+      "type": "array",
+      "description": "Implicit areas per folder; each glob has exactly one {area}.",
+      "items": {
+        "type": "object",
+        "required": ["sources", "tests"],
+        "additionalProperties": false,
+        "properties": {
+          "sources": { "type": "string", "pattern": "^[^{}]*\\{area\\}[^{}]*$" },
+          "tests": { "type": "string", "pattern": "^[^{}]*\\{area\\}[^{}]*$" }
+        }
+      }
+    },
+    "areas": {
+      "type": "object",
+      "description": "Explicit areas; same name as a convention area merges with it.",
+      "additionalProperties": {
+        "type": ["object", "null"],
+        "additionalProperties": false,
+        "properties": {
+          "sources": { "$ref": "#/definitions/globs" },
+          "tests": { "$ref": "#/definitions/globs" },
+          "extra_tests": { "$ref": "#/definitions/globs" },
+          "depends_on": {
+            "type": "array",
+            "items": { "type": "string" },
+            "description": "A depends_on B: a change in B also runs A's tests (transitive)."
+          }
+        }
+      }
+    }
+  },
+  "definitions": {
+    "globs": { "type": "array", "items": { "type": "string" } }
+  }
+}

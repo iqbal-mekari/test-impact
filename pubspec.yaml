@@ -1,0 +1,23 @@
+name: test_impact
+description: >-
+  Convention-first test impact selection for Dart/Flutter workspaces.
+  Maps a git diff to the minimal set of unit tests via per-package
+  test_impact.yaml files, validates the mappings, and runs the selection.
+version: 0.0.1
+repository: https://github.com/iqbal-mekari/test-impact
+publish_to: none
+
+environment:
+  sdk: '>=3.6.0 <4.0.0'
+
+executables:
+  test_impact:
+
+dependencies:
+  analyzer: 6.11.0 # pinned: index_builder uses analyzer src APIs
+  args: ^2.5.0
+  path: ^1.9.0
+  yaml: ^3.1.2
+
+dev_dependencies:
+  test: ^1.25.0
